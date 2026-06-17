@@ -18,8 +18,9 @@ class TelegrafConfigTests(unittest.TestCase):
     def test_uses_standard_topic_mapping_tags(self):
         config = (ROOT / "telegraf.conf").read_text(encoding="utf-8")
 
-        self.assertIn('json_string_fields = ["*"]', config)
-        self.assertIn("line_code/equip_name/station/sensor_code/status_suffix", config)
+        self.assertIn('data_format = "json_v2"', config)
+        self.assertIn('path = "sensors"', config)
+        self.assertIn("line_code/equip_name/station/source/status_suffix", config)
 
 
 if __name__ == "__main__":

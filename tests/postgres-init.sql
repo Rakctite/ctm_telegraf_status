@@ -4,17 +4,18 @@ CREATE TABLE core.sensor_mst (
     id int4 PRIMARY KEY,
     line_code text NOT NULL,
     equip_name text NOT NULL,
+    station text NOT NULL,
     sensor_code text NOT NULL,
     equip_id int4 NOT NULL
 );
 
-INSERT INTO core.sensor_mst (id, line_code, equip_name, sensor_code, equip_id)
+INSERT INTO core.sensor_mst (id, line_code, equip_name, station, sensor_code, equip_id)
 VALUES
-    (211, 'LO054', 'MC02', 'Temp_ST01_PL01', 20),
-    (212, 'LO054', 'MC02', 'Temp_ST01_PL02', 20);
+    (211, 'LO054', 'MC02', '1', 'Temp_ST01_PL01', 20),
+    (212, 'LO054', 'MC02', '1', 'Temp_ST01_PL02', 20);
 
 CREATE VIEW core.v_topic_mapping AS
-SELECT line_code, equip_name, sensor_code, id AS sensor_id, equip_id
+SELECT line_code, equip_name, station, sensor_code, id AS sensor_id, equip_id
 FROM core.sensor_mst;
 
 CREATE TABLE core.sensor_status (

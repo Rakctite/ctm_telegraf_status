@@ -113,13 +113,13 @@ def fetch_mapping_once():
         conn = psycopg2.connect(DB_CONFIG)
         cur = conn.cursor()
         cur.execute("SET search_path TO core, public")
-        cur.execute("SELECT line_code, equip_name, sensor_code, sensor_id, equip_id FROM v_topic_mapping;")
+        cur.execute("SELECT line_code, equip_name, station, sensor_code, sensor_id, equip_id FROM v_topic_mapping;")
         rows = cur.fetchall()
 
         temp_cache = {}
         for row in rows:
-            key = f"{row[0]}:{row[1]}:{row[2]}"
-            temp_cache[key] = (row[3], row[4])
+            key = f"{row[0]}:{row[1]}:{row[2]}:{row[3]}"
+            temp_cache[key] = (row[4], row[5])
 
         with cache_lock:
             mapping_cache = temp_cache
@@ -158,19 +158,23 @@ def process_line(line):
 
         line_code = tags.get("line_code")
         equip_name = tags.get("equip_name")
-        sensor_code = tags.get("sensor_code")
-        if not line_code or not equip_name or not sensor_code:
+        station = tags.get("station")
+        if not line_code or not equip_name or not station:
             return None
 
         fields = dict(item.split("=", 1) for item in _split_unquoted(parts[1], ",") if "=" in item)
         if not REQUIRED_FIELDS.issubset(fields):
             return None
 
+        sensor_code = _unquote_line_value(fields.get("sensor_code", ""))
+        if not sensor_code:
+            return None
+
         timestamp = parse_timestamp_ns(fields["update_time"])
         if timestamp is None:
             return None
 
-        lookup_key = f"{line_code}:{equip_name}:{sensor_code}"
+        lookup_key = f"{line_code}:{equip_name}:{station}:{sensor_code}"
         with cache_lock:
             current_cache = mapping_cache.copy()
         if lookup_key not in current_cache:
