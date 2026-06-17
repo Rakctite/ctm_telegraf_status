@@ -14,7 +14,7 @@ Do not mount local copies over these paths unless you intentionally want to over
 ```text
 203.228.107.184:5000/btx/edge-hmi-db:latest
 203.228.107.184:5000/mosquitto:v1.0.0
-203.228.107.184:5000/btx/ctm_telegraf_status:1.0.2
+203.228.107.184:5000/btx/ctm_telegraf_status:1.0.3
 ```
 
 ## Start
@@ -56,7 +56,7 @@ The compose file supports these optional environment variables:
 | `REGISTRY` | `203.228.107.184:5000` | Container registry address |
 | `DB_IMAGE_TAG` | `latest` | Edge HMI database image tag |
 | `MQTT_IMAGE_TAG` | `v1.0.0` | Mosquitto image tag |
-| `CTM_TELEGRAF_STATUS_IMAGE_TAG` | `1.0.2` | Status Telegraf image tag |
+| `CTM_TELEGRAF_STATUS_IMAGE_TAG` | `1.0.3` | Status Telegraf image tag |
 | `TZ` | `Asia/Jakarta` | Container timezone |
 | `POSTGRES_PORT` | `5432` | PostgreSQL host port |
 | `MQTT_PORT` | `1883` | MQTT host port |
@@ -65,7 +65,7 @@ The compose file supports these optional environment variables:
 PowerShell example:
 
 ```powershell
-$env:CTM_TELEGRAF_STATUS_IMAGE_TAG = "1.0.2"
+$env:CTM_TELEGRAF_STATUS_IMAGE_TAG = "1.0.3"
 docker compose up -d
 ```
 

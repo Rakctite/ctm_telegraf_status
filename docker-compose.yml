@@ -42,7 +42,7 @@ services:
     restart: unless-stopped
 
   ctm_telegraf_status:
-    image: ${REGISTRY:-203.228.107.184:5000}/btx/ctm_telegraf_status:${CTM_TELEGRAF_STATUS_IMAGE_TAG:-1.0.2}
+    image: ${REGISTRY:-203.228.107.184:5000}/btx/ctm_telegraf_status:${CTM_TELEGRAF_STATUS_IMAGE_TAG:-1.0.3}
     pull_policy: always
     container_name: ctm_telegraf_status
     environment:

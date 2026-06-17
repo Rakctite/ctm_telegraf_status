@@ -5,7 +5,7 @@ Consumes `C-S/+/+/+/+/+/+/+/status` MQTT messages and inserts each sensor snapsh
 ## Build
 
 ```sh
-docker build -t ctm_telegraf_status:1.0.2 .
+docker build -t ctm_telegraf_status:1.0.3 .
 ```
 
 The image is built independently from the official `telegraf:1.38.4` image.
@@ -43,7 +43,7 @@ Payload:
 }
 ```
 
-`mapping_processor.py` maps `line_code:equip_name:station:sensor_code` through `core.v_topic_mapping` and inserts into `core.sensor_status`. The `sensor_code` value comes from each item in the `sensors` array.
+`mapping_processor.py` maps `line_code:equip_name:sensor_code` through `core.v_topic_mapping` and inserts into `core.sensor_status`. The view exposes `sensor_mst.sensor_name` as the `sensor_code` alias, so the payload `sensor_code` is matched against that alias. The `station` topic segment is retained as a tag for compatibility with the existing Telegraf topic shape, but the current view does not expose a `station` column.
 
 ## Docker Compose
 

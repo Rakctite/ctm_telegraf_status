@@ -15,12 +15,11 @@ class MappingProcessorTests(unittest.TestCase):
         self.processor = importlib.import_module("mapping_processor")
         with self.processor.cache_lock:
             self.processor.mapping_cache = {
-                "LO054:MC02:ST01:Temp_ST01_PL01": (211, 20),
-                "LO054:MC02:ST01:Temp_ST01_PL02": (212, 20),
-                "LO054:MC02:ST02:Temp_ST01_PL01": (311, 21),
+                "LO054:MC02:Temp_ST01_PL01": (211, 20),
+                "LO054:MC02:Temp_ST01_PL02": (212, 20),
             }
 
-    def test_maps_status_topic_station_and_sensor_code_to_sensor_id(self):
+    def test_maps_status_topic_sensor_code_to_sensor_id_with_station_tag_retained(self):
         line = (
             'mqtt_consumer,equip_name=MC02,line_code=LO054,station=ST01,source=iot_temp,status_suffix=status '
             'sensor_code="Temp_ST01_PL01",conn_status="on",last_seen="2026-06-18 05:25:09.580+07",'
@@ -35,20 +34,6 @@ class MappingProcessorTests(unittest.TestCase):
             'sensor_status sensor_id=211i,conn_status="on",'
             'last_seen="2026-06-18 05:25:09.580+07",health_score=100 '
             "1781735110210000000\n",
-        )
-
-    def test_uses_station_to_disambiguate_same_sensor_code(self):
-        line = (
-            'mqtt_consumer,equip_name=MC02,line_code=LO054,station=ST02,source=iot_temp,status_suffix=status '
-            'sensor_code="Temp_ST01_PL01",conn_status="on",update_time="2026-06-18 05:25:10.210+07" '
-            "1781735110210000000"
-        )
-
-        result = self.processor.process_line(line)
-
-        self.assertEqual(
-            result,
-            'sensor_status sensor_id=311i,conn_status="on" 1781735110210000000\n',
         )
 
     def test_rejects_non_status_topic(self):
