@@ -1,62 +1,73 @@
+import importlib
 import pathlib
 import sys
+import types
 import unittest
 
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "telegraf_py"))
-
-from mapping_processor import process_line
+sys.modules.setdefault("psycopg2", types.SimpleNamespace(connect=None))
 
 
 class MappingProcessorTests(unittest.TestCase):
-    def test_normalizes_status_metric_and_preserves_timestamp(self):
+    def setUp(self):
+        self.processor = importlib.import_module("mapping_processor")
+        with self.processor.cache_lock:
+            self.processor.mapping_cache = {
+                "LO054:MC02:Temp_ST01_PL01": (211, 20),
+                "LO054:MC02:Temp_ST01_PL02": (212, 20),
+            }
+
+    def test_maps_status_topic_sensor_code_to_sensor_id(self):
         line = (
-            'mqtt_consumer,topic=C-S/site/iot_temp/status '
-            'sensor_id=211i,conn_status="on",last_seen="2026-06-12 06:07:10.034+07",'
-            'health_score=98.3,error_msg="crc error" 1781222830037000000'
+            'mqtt_consumer,equip_name=MC02,line_code=LO054,sensor_code=Temp_ST01_PL01,status_suffix=status '
+            'sensor_code="Temp_ST01_PL01",conn_status="on",last_seen="2026-06-18 05:25:09.580+07",'
+            'health_score=100,error_msg="",update_time="2026-06-18 05:25:10.210+07" '
+            "1781735110210000000"
         )
 
-        result = process_line(line)
+        result = self.processor.process_line(line)
 
         self.assertEqual(
             result,
             'sensor_status sensor_id=211i,conn_status="on",'
-            'last_seen="2026-06-12 06:07:10.034+07",health_score=98.3,'
-            'error_msg="crc error" 1781222830037000000\n',
+            'last_seen="2026-06-18 05:25:09.580+07",health_score=100 '
+            "1781735110210000000\n",
         )
 
-    def test_omits_unknown_fields(self):
+    def test_rejects_non_status_topic(self):
         line = (
-            'mqtt_consumer sensor_id=211i,conn_status="off",health_score=50.0,'
-            'unexpected="drop-me" 1781222830037000000'
+            'mqtt_consumer,equip_name=MC02,line_code=LO054,sensor_code=Temp_ST01_PL01 '
+            'conn_status="on" 1781735110210000000'
         )
 
-        result = process_line(line)
+        self.assertIsNone(self.processor.process_line(line))
 
-        self.assertNotIn("unexpected", result)
-        self.assertEqual(
-            result,
-            'sensor_status sensor_id=211i,conn_status="off",health_score=50.0 '
-            '1781222830037000000\n',
-        )
-
-    def test_rejects_metric_without_required_fields(self):
+    def test_rejects_unmapped_sensor_code(self):
         self.assertIsNone(
-            process_line(
-                'mqtt_consumer health_score=0.0 1781222830037000000'
+            self.processor.process_line(
+                'mqtt_consumer,equip_name=MC02,line_code=LO054,sensor_code=UNKNOWN,status_suffix=status '
+                'conn_status="on" 1781735110210000000'
             )
         )
 
-    def test_handles_escaped_commas_and_quotes_in_error_message(self):
+    def test_keeps_error_message_with_escaped_commas_and_quotes(self):
         line = (
-            'mqtt_consumer sensor_id=211i,conn_status="off",'
-            'error_msg="CRC failed, response=\\\"bad\\\"" 1781222830037000000'
+            'mqtt_consumer,equip_name=MC02,line_code=LO054,sensor_code=Temp_ST01_PL02,status_suffix=status '
+            'conn_status="off",last_seen="2026-06-18 05:25:09.580+07",'
+            'health_score=50,error_msg="CRC failed, response=\\\"bad\\\"",'
+            'update_time="2026-06-18 05:25:10.210+07" 1781735110210000000'
         )
 
-        result = process_line(line)
+        result = self.processor.process_line(line)
 
-        self.assertIn('error_msg="CRC failed, response=\\\"bad\\\""', result)
+        self.assertEqual(
+            result,
+            'sensor_status sensor_id=212i,conn_status="off",'
+            'last_seen="2026-06-18 05:25:09.580+07",health_score=50,'
+            'error_msg="CRC failed, response=\\"bad\\"" 1781735110210000000\n',
+        )
 
 
 if __name__ == "__main__":

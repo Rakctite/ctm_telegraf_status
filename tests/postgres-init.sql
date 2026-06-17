@@ -1,10 +1,21 @@
 CREATE SCHEMA core;
 
 CREATE TABLE core.sensor_mst (
-    id int4 PRIMARY KEY
+    id int4 PRIMARY KEY,
+    line_code text NOT NULL,
+    equip_name text NOT NULL,
+    sensor_code text NOT NULL,
+    equip_id int4 NOT NULL
 );
 
-INSERT INTO core.sensor_mst (id) VALUES (211), (212);
+INSERT INTO core.sensor_mst (id, line_code, equip_name, sensor_code, equip_id)
+VALUES
+    (211, 'LO054', 'MC02', 'Temp_ST01_PL01', 20),
+    (212, 'LO054', 'MC02', 'Temp_ST01_PL02', 20);
+
+CREATE VIEW core.v_topic_mapping AS
+SELECT line_code, equip_name, sensor_code, id AS sensor_id, equip_id
+FROM core.sensor_mst;
 
 CREATE TABLE core.sensor_status (
     id int8 GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
@@ -20,4 +31,3 @@ CREATE TABLE core.sensor_status (
 
 CREATE INDEX idx_sensor_status_sensor_update
     ON core.sensor_status (sensor_id, update_time DESC);
-

@@ -4,7 +4,7 @@
 
 **Goal:** Consume plate sensor status MQTT messages and insert every sensor snapshot into `core.sensor_status`.
 
-**Architecture:** Telegraf 1.38.4 expands the `sensors` JSON array into individual metrics. A Python execd processor validates and normalizes line protocol before the SQL output's PostgreSQL `pgx` driver inserts rows with the metric timestamp stored as `update_time`.
+**Architecture:** Telegraf 1.38.4 parses flat status JSON and topic tags using the same topic mapping shape as the measurement pipeline. A Python execd processor maps `line_code:equip_name:sensor_code` through `core.v_topic_mapping`, normalizes line protocol, and the SQL output's PostgreSQL `pgx` driver inserts rows with the metric timestamp stored as `update_time`.
 
 **Tech Stack:** Telegraf 1.38.4, MQTT, JSON v2 parser, Python 3, Influx line protocol, PostgreSQL, Docker
 
@@ -27,7 +27,7 @@
 - Create: `telegraf.conf`
 
 - [x] Configure the same agent batching values as `ctm_telegraf`.
-- [x] Configure MQTT topic `C-S/+/+/+/+/+/+/+/status`, QoS 1, and JSON v2 array expansion at `sensors`.
+- [x] Configure MQTT topic `C-S/+/+/+/+/+/+/+/status`, QoS 1, flat JSON parsing, `update_time`, and topic parsing for `sensor_code/status_suffix`.
 - [x] Configure the execd processor to run `/telegraf/telegraf_py/mapping_processor.py`.
 - [x] Configure SQL output with the PostgreSQL `pgx` driver, schema search path `core`, table `sensor_status`, timestamp column `update_time`, and no conflict action.
 - [x] Run Telegraf 1.38.4 config validation.
